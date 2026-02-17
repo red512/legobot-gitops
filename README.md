@@ -1,11 +1,11 @@
-# triton-gitops
+# legobot-gitops
 
-GitOps repository for Triton platform deployments using Helm charts and ArgoCD.
+GitOps repository for legobot platform deployments using Helm charts and ArgoCD.
 
 ## Structure
 
 ```
-triton-gitops/
+legobot-gitops/
 ├── argocd/           # ArgoCD application definitions
 │   └── apps/         # Individual app manifests
 ├── helm/             # Helm charts for all services

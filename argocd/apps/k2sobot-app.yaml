@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/red512/triton-gitops
+    repoURL: https://github.com/red512/legobot-gitops
     targetRevision: HEAD
     path: helm/k2sobot-helm-chart
   destination:
