@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k2sobot
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: k2sobot
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: k2sobot
+  template:
+    metadata:
+      labels:
+        app: k2sobot
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: k2sobot
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "{{ .Values.env.PYTHONUNBUFFERED }}"
+            {{- if .Values.mcp.enabled }}
+            - name: MCP_SERVER_URL
+              value: "{{ .Values.mcp.serverUrl }}"
+            {{- end }}
+            - name: ARGOCD_SERVER
+              value: "{{ .Values.argocd.server }}"
+            - name: ARGOCD_USERNAME
+              value: "{{ .Values.argocd.username }}"
+            - name: ARGOCD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: k2sobot-secrets
+                  key: ARGOCD_PASSWORD
+            - name: ARGOCD_INSECURE
+              value: "{{ .Values.argocd.insecure }}"
+            - name: SLACK_SIGNING_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: k2sobot-secrets
+                  key: SLACK_SIGNING_SECRET
+                  optional: true
+            - name: SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: k2sobot-secrets
+                  key: SLACK_BOT_TOKEN
+                  optional: true
+            - name: VERIFICATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: k2sobot-secrets
+                  key: VERIFICATION_TOKEN
+                  optional: true
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: k2sobot-secrets
+                  key: GEMINI_API_KEY
+                  optional: true
+          {{- if .Values.health.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.health.path }}
+              port: {{ .Values.health.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.health.path }}
+              port: {{ .Values.health.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      restartPolicy: Always

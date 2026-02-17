@@ -1,0 +1,6 @@
+# Secret files
+slack-bot-token.yaml
+slack-signing-secret.yaml
+verification-token.yaml
+bnfrbot-secrets.yaml
+bnfrmcp-secrets.yaml

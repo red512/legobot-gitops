@@ -1,0 +1,4 @@
+apiVersion: v2
+name: k2sobot-chart
+description: A Helm chart for deploying K2SO Kubernetes Assistant Bot service
+version: 0.1.0
