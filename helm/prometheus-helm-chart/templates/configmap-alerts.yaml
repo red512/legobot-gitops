@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerts
+  namespace: monitoring
+  labels:
+    app: prometheus
+    component: alerts
+data:
+  alerts.yaml: |
+    groups:
+    - name: kubernetes_alerts
+      interval: 30s
+      rules:
+      - alert: KubernetesPodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been restarting frequently"
+
+      - alert: KubernetesPodNotReady
+        expr: |
+          sum by (namespace, pod) (kube_pod_status_phase{phase!="Running"}) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not ready"
+          description: "Pod has been in a non-ready state for more than 10 minutes"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (sum(container_memory_working_set_bytes) by (pod, namespace) / sum(container_spec_memory_limit_bytes) by (pod, namespace)) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage for pod {{ $labels.namespace }}/{{ $labels.pod }}"
+          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is using more than 80% of its memory limit"
+
+      - alert: HighCPUUsage
+        expr: |
+          (sum(rate(container_cpu_usage_seconds_total[5m])) by (pod, namespace) / sum(container_spec_cpu_quota) by (pod, namespace)) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage for pod {{ $labels.namespace }}/{{ $labels.pod }}"
+          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is using more than 80% of its CPU limit"
