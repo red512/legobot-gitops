@@ -45,6 +45,11 @@ argocd:
   username: "admin"
   insecure: "true"
 
+# MCP (Model Context Protocol) configuration
+mcp:
+  enabled: false
+  serverUrl: ""
+
 sealedSecrets:
   enabled: true
   secrets:

@@ -1,21 +1,34 @@
-# legobot-gitops
+# legobot-terraform# legobot-gitops
 
-GitOps repository for legobot platform deployments using Helm charts and ArgoCD.
 
 ## Structure
 
 ```
 legobot-gitops/
-├── argocd/           # ArgoCD application definitions
-│   └── apps/         # Individual app manifests
-├── helm/             # Helm charts for all services
-│   ├── bnfrbot-helm-chart/       # Slack bot application
-│   ├── bnfrmcp-helm-chart/       # MCP server
-│   ├── kagent-helm-chart/        # K8s agent
-│   ├── backend-helm-chart/       # Backend service
-│   ├── ollama-helm-chart/        # Ollama LLM service
-│   └── prometheus-helm-chart/    # Monitoring stack
-└── README.md
+├── argocd
+│   └── apps
+└── helm
+    ├── backend-helm-chart
+    └── k2sobot-helm-chart
+
+legobot-terrafrom/
+.
+├── argocd.tf
+├── aws-provider.tf
+├── data.tf
+├── eks.tf
+├── helm-provider.tf
+├── helm-values
+│   |── argocd-values.yaml
+├── iam.tf
+├── load-balancer-controller.tf
+├── locals.tf
+├── metrics-server.tf
+├── terraform.tfstate
+├── terraform.tfstate.backup
+├── variables.tf
+└── vpc.tf
+
 ```
 
 ## Quick Start
@@ -31,7 +44,6 @@ legobot-gitops/
 
 All sensitive configuration is managed through Bitnami Sealed Secrets for secure GitOps workflows.
 
-**Important:** Never commit plain secret files. They are in `.gitignore`:
 - `*-secrets.yaml` (plain secrets)
 - `sealed-*-secrets.yaml` (sealed secrets with encrypted data)
 
@@ -50,27 +62,20 @@ kubeseal --controller-name sealed-secrets \
   --controller-namespace sealed-secrets \
   --format yaml < secret.yaml > sealed-secret.yaml
 
+
+  example:
+    kubectl create secret generic k2sobot-secrets -n k2so \
+  --from-literal=SLACK_BOT_TOKEN="xoxb-example_password" \
+  --from-literal=SLACK_SIGNING_SECRET="example_password" \
+  --from-literal=VERIFICATION_TOKEN="example_password" \
+  --from-literal=GEMINI_API_KEY="example_password" \
+  --from-literal=ARGOCD_PASSWORD="example_password" \
+  --dry-run=client -o yaml > k2sobot-secrets.yaml
+
+  kubeseal --controller-name sealed-secrets \            
+  --controller-namespace sealed-secrets \
+  --format yaml < k2sobot-secrets.yaml > sealed-k2sobot-secrets.yaml
+
 # Extract and add encrypted values to Helm values.yaml
 ```
 
-## Helm Charts
-
-Each component has its own Helm chart with detailed configuration options:
-
-- **[bnfrbot-helm-chart](helm/bnfrbot-helm-chart/README.md)** - Slack bot with LLM integration
-- **bnfrmcp-helm-chart** - MCP server for vector store and tool orchestration
-- **backend-helm-chart** - Backend API service
-- **kagent-helm-chart** - Kubernetes management agent
-- **ollama-helm-chart** - Self-hosted LLM inference
-
-## ArgoCD
-
-ArgoCD applications are defined in `argocd/apps/` and manage automated deployment from this repository.
-
-## Contributing
-
-When adding new secrets:
-1. Generate sealed secrets locally
-2. Update only the `values.yaml` with encrypted strings
-3. Never commit plain text secrets
-4. Ensure secret files are in `.gitignore`
